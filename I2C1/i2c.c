@@ -223,3 +223,12 @@ uint8_t i2c_write( uint8_t slave_address, uint8_t* data, uint8_t N ){
 	while( I2C1->CR1 & I2C_CR1_STOP){if (i2c1_error) return i2c1_error;}
 	return 0;
 }
+
+void check_i2cerr( uint8_t i2c_error ){
+	if (i2c_error){
+		itoa(i2c_error, strbuf, 2);
+		USART1_transmitString("\n error: ");
+		USART1_transmitString(strbuf);
+		USART1_transmit('\n');
+	}
+}

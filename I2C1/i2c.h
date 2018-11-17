@@ -27,10 +27,11 @@ volatile uint8_t i2c1_error;
 void I2C1_ER_IRQHandler();
 // initialization of I2C1
 void init_i2c1();
-// read N bytes
+// read N bytes, return error code or 0 if no error occured
 uint8_t i2c_read( uint8_t slave_address, uint8_t* data, uint8_t N );
-// write N bytes
+// write N bytes, return error code or 0 if no error occured
 uint8_t i2c_write( uint8_t slave_address, uint8_t* data, uint8_t N );
-
+// check if an error occured and print the error code over USART1
+void check_i2cerr( uint8_t i2c_error );
 
 #endif /* I2C_H_ */
