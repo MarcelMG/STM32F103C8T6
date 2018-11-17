@@ -226,6 +226,7 @@ uint8_t i2c_write( uint8_t slave_address, uint8_t* data, uint8_t N ){
 
 void check_i2cerr( uint8_t i2c_error ){
 	if (i2c_error){
+		char strbuf[7];
 		itoa(i2c_error, strbuf, 2);
 		USART1_transmitString("\n error: ");
 		USART1_transmitString(strbuf);

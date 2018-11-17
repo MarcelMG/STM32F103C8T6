@@ -9,6 +9,7 @@
 #define I2C_H_
 
 #include "stm32f1xx.h"
+#include <stdlib.h>
 
 // set this to 1 to remap the SDA/SCL pins from PB6/7 to PB8/9
 #define REMAP 0
@@ -28,9 +29,9 @@ void I2C1_ER_IRQHandler();
 // initialization of I2C1
 void init_i2c1();
 // read N bytes, return error code or 0 if no error occured
-uint8_t i2c_read( uint8_t slave_address, uint8_t* data, uint8_t N );
+uint8_t i2c1_read( uint8_t slave_address, uint8_t* data, uint8_t N );
 // write N bytes, return error code or 0 if no error occured
-uint8_t i2c_write( uint8_t slave_address, uint8_t* data, uint8_t N );
+uint8_t i2c1_write( uint8_t slave_address, uint8_t* data, uint8_t N );
 // check if an error occured and print the error code over USART1
 void check_i2cerr( uint8_t i2c_error );
 
