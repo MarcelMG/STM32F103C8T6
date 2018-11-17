@@ -12,6 +12,8 @@
 
 // set this to 1 to remap the SDA/SCL pins from PB6/7 to PB8/9
 #define REMAP 0
+// set this to 1 to use fast mode with f=360kHz, else use standard mode with f=100kHz
+#define FAST_MODE 1
 // error codes
 #define BUS_ERROR 			(1<<0)
 #define ARBITRATION_LOSS 	(1<<1)

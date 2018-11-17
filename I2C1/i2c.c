@@ -37,8 +37,8 @@ void I2C1_ER_IRQHandler(){
 	}
 }
 
-/* initialize the I2C1 peripheral in standard mode (100kHz) assuming an APB1/PCLK1 clock of 36MHz
-   fast mode (400kHz) can only be used when PCLK1 is a multiple of 10MHz */
+/* initialize the I2C1 peripheral in fast mode with f_SCL=360kHz assuming an APB1/PCLK1 clock of 36MHz
+   note: 400kHz can only be achieved when PCLK1 is a multiple of 10MHz */
 void init_i2c1(){
 	// enable alternate function and port B I/O peripheral clock
 	RCC->APB2ENR |= RCC_APB2ENR_AFIOEN | RCC_APB2ENR_IOPBEN;
@@ -60,12 +60,23 @@ void init_i2c1(){
 	// set the APB1 clock value so the I2C peripheral can derive the correct timings
 	// APB1 clock is 36MHz since SysCoreClock==72E6 and RCC_CFGR_PPRE1_DIV2==1
 	I2C1->CR2 = (36 & I2C_CR2_FREQ);
-	// set I2C master mode to standard mode (100kHz) and set the CCR value
+#if FAST_MODE
+	// set I2C master mode to fast mode with DUTY=1 and set the CCR value
+	// CCR = PCLK1[Hz] / (25*400e3[Hz]), so here CCR=36e6/(25*400e3)=3.6
+	// so we have to round to the next larger value (i.e. 4) and thus can only achieve a
+	// frequency of f = 360kHz (to achieve 400kHz, PCLK1 must be a multiple of 10MHz)
+	I2C1->CCR = I2C_CCR_FS | I2C_CCR_DUTY | 4;
+	// set the TRISE value, it is calculated as follows for fast mode: Trise = 1 + 300E-9*PCLK1[Hz]
+	// so here Trise=1+300E-9*36E6=11.8, round down to 11
+	I2C1->TRISE = 11;
+#else
+	// set I2C master mode to standard mode (100kHz) with DUTY= 0 and set the CCR value
 	// CCR = PCLK1[Hz] / (2*100e3[Hz]), so here CCR=36e6/(2*100e3)=180
 	I2C1->CCR = 180;
-	// set the TRISE value, it is calculated as follows for standard mode: Trise = 1 + PCLK1[MHz]
-	// so here Trise=1+36=37
+	// set the TRISE value, it is calculated as follows for standard mode: Trise = 1 + 1E-6*PCLK1[Hz]
+	// so here Trise=1+36=37 (round down to nearest integer in case of fraction)
 	I2C1->TRISE = 37;
+#endif
 	//enable the I2C1 peripheral
 	I2C1->CR1 |= I2C_CR1_PE;
 	//enable the error interrupt
