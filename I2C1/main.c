@@ -46,17 +46,17 @@ int main(void){
 	// init the I2C1 peripheral and the SDA/SCL GPIO pins
 	init_i2c1();
 	USART1_transmitString("testing QMC5883L:\n");
+	// init QMC5883L
+	buf[0] = SET_RESET_PERIOD_REGISTER;
+	buf[1] = 0x01;
+	i2c_err = i2c_write(QMC5883L_ADRESS, buf, 2);
+	check_i2cerr(i2c_err);
+	buf[0] = CONTROL_REGISTER_1;
+	// continuous mode, 200Hz data rate, 2G scale, 64 oversampling ratio
+	buf[1] = 0b11001101;
+	i2c_err = i2c_write(QMC5883L_ADRESS, buf, 2);
+	check_i2cerr(i2c_err);
 	while(1){
-		// init QMC5883L
-		buf[0] = SET_RESET_PERIOD_REGISTER;
-		buf[1] = 0x01;
-		i2c_err = i2c_write(QMC5883L_ADRESS, buf, 2);
-		check_i2cerr(i2c_err);
-		buf[0] = CONTROL_REGISTER_1;
-		// continuous mode, 200Hz data rate, 2G scale, 64 oversampling ratio
-		buf[1] = 0b11001101;
-		i2c_err = i2c_write(QMC5883L_ADRESS, buf, 2);
-		check_i2cerr(i2c_err);
 		// read x-data
 		buf[0] = X_DATA_LSB;
 		i2c_err = i2c_write(QMC5883L_ADRESS, buf, 1);
