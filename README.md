@@ -5,7 +5,8 @@ There is a simple example for each peripheral, so far including:
 * Timer interrupts
 * PWM
 * ADC
-* DMA
+* DMA with ADC
+* DMA with PWM
 * I2C
 * USART
 
