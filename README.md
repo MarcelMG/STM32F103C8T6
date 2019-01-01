@@ -6,7 +6,7 @@ There is a simple example for each peripheral, so far including:
 * PWM
 * ADC
 * DMA with ADC
-* DMA with PWM
+* DMA with PWM to make a PWM DAC
 * I2C
 * USART
 
