@@ -9,7 +9,7 @@
  * 	connect the output pin PA0 to a RC-low-pass filter
  * 	e.g. R=100R and C=100nF give ~16kHz cutoff frequency
  *
- *	here the PWM frequency is about 70kHz, and the sampling frequency
+ *	here the PWM frequency is about 140kHz, and the sampling frequency
  *	almost exactly 44.1kHz (which is the standard value for audio)
  *	the analog filter should dampen all frequencies > 22.05kHz (half of sampling frequency)
  *
@@ -39,7 +39,7 @@ int main(void)
 	// configure pin PA0 as AFIO push-pull output with max speed
 	GPIOA->CRL &=~(GPIO_CRL_MODE0 | GPIO_CRL_CNF0);
 	GPIOA->CRL |= GPIO_CRL_MODE0 | GPIO_CRL_CNF0_1;
-	// set timer 2 prescaler to 1, so the timer frequency is equal to the APB2 frequency (here 36MHz)
+	// set timer 2 prescaler to 1, so the timer frequency is equal to the APB2 frequency (here 72MHz)
 	// the actual prescaling factor is PSC+1
 	TIM2->PSC = 0;
 	// set the auto-reload value, i.e. the max counter value
@@ -59,7 +59,7 @@ int main(void)
 	TIM2->CCER |= TIM_CCER_CC1E;
 	// enable center-aligned mode 3
 	// in center-aligned mode the PWM frequency is only half as high as in edge aligned mode
-	// so here f_PWM = f_APB2 / ( 2*(PSC+1)*ARR ) = approx. 70.3kHz
+	// so here f_PWM = f_APB2 / ( 2*(PSC+1)*ARR ) = approx. 140.6 kHz
 	TIM2->CR1 |= TIM_CR1_CMS;
 	// enable the timer 2 counter
 	TIM2->CR1 |= TIM_CR1_CEN;
