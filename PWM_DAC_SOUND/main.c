@@ -1,7 +1,7 @@
 /*	example on how to make a 8bit PWM DAC (Digital to Analog Converter)
  *  and play a test audio signal
  *
- * 	-> Timer 2 is used for PWM generation
+ * 	-> Timer 2 is used for PWM generation with 280kHz in left-aligned mode
  * 	-> Timer 1 is used to trigger the DMA at a regular frequency (the sampling frequency)
  *	-> DMA transfers the duty-cycle values (the 'amplitude' of the generated signal)
  *	   to the corresponding register of timer 2
@@ -9,10 +9,9 @@
  * 	connect the output pin PA0 to a RC-low-pass filter
  * 	e.g. R=100R and C=100nF give ~16kHz cutoff frequency
  *
- *	here the PWM frequency is about 140kHz, and the sampling frequency
- *	almost exactly 44.1kHz (which is the standard value for audio)
+ *	the sampling frequency is almost exactly 44.1kHz (which is the standard value for audio)
  *	the analog filter should dampen all frequencies > 22.05kHz (half of sampling frequency)
- *
+ *	that are outside the audible spectrum
  *
  *  written in 2018 by Marcel Meyer-Garcia
  *  see LICENCE.txt
@@ -21,7 +20,9 @@
 #include "stm32f1xx.h"
 #include "init.h" //contains the system clock setup and SysTick init
 
-#include "hello.h"
+#include "hello.h"	//contains a test audio snippet
+
+const uint8_t sine_LUT[9] = {128,209,253,238,171,84,17,2,46}; // samples of a sine wave
 
 int main(void)
 {
@@ -44,8 +45,8 @@ int main(void)
 	TIM2->PSC = 0;
 	// set the auto-reload value, i.e. the max counter value
 	TIM2->ARR = 255;
-	// set the output compare value which determine the duty cycle
-	TIM2->CCR1 = 0;
+	// set the output compare value which determines the duty cycle
+	TIM2->CCR1 = 128;
 	// configure channel 1 to PWM mode 1 together with the preload feature
 	// refer to ST's app note "AN4776" p.14-16 for details about preload
 	// PWM mode 1: duty_cycle = CCRx / ARR
@@ -57,10 +58,14 @@ int main(void)
 	TIM2->CCER &=~TIM_CCER_CC1P;
 	// enable the compare outputs
 	TIM2->CCER |= TIM_CCER_CC1E;
-	// enable center-aligned mode 3
-	// in center-aligned mode the PWM frequency is only half as high as in edge aligned mode
-	// so here f_PWM = f_APB2 / ( 2*(PSC+1)*ARR ) = approx. 140.6 kHz
-	TIM2->CR1 |= TIM_CR1_CMS;
+	// left-aligned mode is default
+
+	/* 	enable center-aligned mode 3
+ 	 	in center-aligned mode the PWM frequency is only half as high as in edge aligned mode
+	 	so here f_PWM = f_APB2 / ( 2*(PSC+1)*ARR ) = approx. 140.6 kHz
+	*/
+	//TIM2->CR1 |= TIM_CR1_CMS;
+
 	// enable the timer 2 counter
 	TIM2->CR1 |= TIM_CR1_CEN;
 
@@ -75,13 +80,15 @@ int main(void)
 	// set the memory address from where to fetch the data
 	// this is the starting address of our array of samples
 	DMA1_Channel5->CMAR = (uint32_t) hello;
-	// set the number of data to be transferred
+	//DMA1_Channel5->CMAR = (uint32_t) sine_LUT;
+	// set the number of data (samples) to be transferred
 	DMA1_Channel5->CNDTR = HELLO_LENGTH;
+	//DMA1_Channel5->CNDTR = 9; //for sine_LUT
 	// set data transfer direction to "memory->peripheral"
 	DMA1_Channel5->CCR |= DMA_CCR_DIR;
 	// set the DMA channel priority to "high"
 	DMA1_Channel5->CCR |= DMA_CCR_PL_1;
-	// enable circular mode
+	// enable circular mode (this means it will be repeated eternally)
 	//DMA1_Channel5->CCR |= DMA_CCR_CIRC;
 	// enable memory increment mode
 	DMA1_Channel5->CCR |= DMA_CCR_MINC;
