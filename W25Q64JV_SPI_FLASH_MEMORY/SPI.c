@@ -34,10 +34,8 @@ void init_SPI1(bool remap, uint16_t config){
 		// configure the pins:
 		GPIOA->CRL &=~ 	(GPIO_CRL_MODE5 | GPIO_CRL_MODE6 | GPIO_CRL_MODE7 | GPIO_CRL_CNF5 | GPIO_CRL_CNF6 | GPIO_CRL_CNF7);
 		// configure PA5(SCK1) & PA7(MOSI1) as AFIO push-pull outputs
-		// and PA6(MISO1) as input with pullup
-		GPIOA->CRL |= GPIO_CRL_MODE5 | GPIO_CRL_MODE6_1 | GPIO_CRL_MODE7 | GPIO_CRL_CNF5_1 | GPIO_CRL_CNF7_1 ;
-		// activate pullup on PA6
-		GPIOA->ODR |= GPIO_ODR_ODR6;
+		// and PA6(MISO1) as floating input
+		GPIOA->CRL |= GPIO_CRL_MODE5 | GPIO_CRL_MODE7 | GPIO_CRL_CNF5_1 | GPIO_CRL_CNF6_1 |GPIO_CRL_CNF7_1 ;
 	}
 	// configure the SPI mode (i.e. clock polarity & phase), data frame format and clock speed (<config>)
 	// set in in Master mode and set NSS to software mode (i.e. the slave select is optional and controlled externally by a GPIO pin)
