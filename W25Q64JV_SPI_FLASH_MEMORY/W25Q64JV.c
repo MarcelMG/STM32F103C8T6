@@ -2,20 +2,12 @@
  *  see LICENCE.txt
  */
 #include "W25Q64JV.h"
-#include "W25Q64JV_instruction_set.h"
-
-#include "SPI.h" //the SPI driver
-
-// these 3 defines allow easy porting to another platform
-#define CS_LOW()	GPIOA->BSRR=GPIO_BSRR_BR4	//pull chip select line low
-#define CS_HIGH()	GPIOA->BSRR=GPIO_BSRR_BS4	//push chip select line high
-#define SPI_transmit SPI1_transmit				//transmit & receive 1 byte via SPI
 
 // this function is the only one that has to be modified when porting to another platform
 // it has to set up the SPI and the GPIO needed for SPI(including one for the CS line)
 void init_W25Q64JV(){
 	// f_SPI = 72MHz/SPI_BAUD_DIV_X
-	init_SPI1(false, (SPI_MODE_0 | SPI_MSB_FIRST | SPI_8BIT_FRAME | SPI_BAUD_DIV_4) );
+	init_SPI1(false, (SPI_MODE_0 | SPI_MSB_FIRST | SPI_8BIT_FRAME | SPI_BAUD_DIV_256) );
 	// setup a GPIO pin, e.g. PA4 as output for the CS(chip select) line
 	// enable clock for GPIO port
 	RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
@@ -87,6 +79,14 @@ void write_W25Q64JV(uint32_t address, uint16_t length, uint8_t* source_ptr){
 	// CS low, SPI slave starts to listen
 	CS_LOW();
 	// send instruction
+	SPI_transmit(WRITE_ENABLE);
+	// CS high, transmission finished
+	CS_HIGH();
+	//eventually a small delay is needed here, depends on your µC's speed
+	asm("NOP");asm("NOP");asm("NOP");asm("NOP");asm("NOP");asm("NOP");asm("NOP");
+	// CS low, SPI slave starts to listen
+	CS_LOW();
+	// send instruction
 	SPI_transmit(PAGE_PROGRAM);
 	// send 24bit address MSB first
 	SPI_transmit( (uint8_t)(address>>16) );
@@ -107,9 +107,7 @@ void write_W25Q64JV(uint32_t address, uint16_t length, uint8_t* source_ptr){
 	// CS low, SPI slave starts to listen
 	CS_LOW();
 	// poll status register 1 to check the BUSY bit which indicates that writing procedure is over
-	// the BUSY bit becomes 0 when the writing procedure is finished
-	while( !(SPI_transmit(READ_STATUS_REG_1) & STATUS_REG_1_BUSY_BIT) );
-	// CS high, transmission finished
+	wait_busy_flag_W25Q64JV();
 	CS_HIGH();
 }
 
@@ -140,8 +138,7 @@ void sector_erase_W25Q64JV(uint32_t address){
 	// CS low, SPI slave starts to listen
 	CS_LOW();
 	// poll status register 1 to check the BUSY bit which indicates that erase procedure is over
-	// the BUSY bit becomes 0 when the erasing procedure is finished
-	while( !(SPI_transmit(READ_STATUS_REG_1) & STATUS_REG_1_BUSY_BIT) );
+	wait_busy_flag_W25Q64JV();
 	// CS high, transmission finished
 	CS_HIGH();
 }
@@ -172,8 +169,7 @@ void block_erase_32KB_W25Q64JV(uint32_t address){
 	// CS low, SPI slave starts to listen
 	CS_LOW();
 	// poll status register 1 to check the BUSY bit which indicates that erase procedure is over
-	// the BUSY bit becomes 0 when the erasing procedure is finished
-	while( !(SPI_transmit(READ_STATUS_REG_1) & STATUS_REG_1_BUSY_BIT) );
+	wait_busy_flag_W25Q64JV();
 	// CS high, transmission finished
 	CS_HIGH();
 }
@@ -204,8 +200,7 @@ void block_erase_64KB_W25Q64JV(uint32_t address){
 	// CS low, SPI slave starts to listen
 	CS_LOW();
 	// poll status register 1 to check the BUSY bit which indicates that erase procedure is over
-	// the BUSY bit becomes 0 when the erasing procedure is finished
-	while( !(SPI_transmit(READ_STATUS_REG_1) & STATUS_REG_1_BUSY_BIT) );
+	wait_busy_flag_W25Q64JV();
 	// CS high, transmission finished
 	CS_HIGH();
 }
@@ -230,8 +225,7 @@ void erase_chip_W25Q64JV(){
 	// CS low, SPI slave starts to listen
 	CS_LOW();
 	// poll status register 1 to check the BUSY bit which indicates that erase procedure is over
-	// the BUSY bit becomes 0 when the erasing procedure is finished
-	while( !(SPI_transmit(READ_STATUS_REG_1) & STATUS_REG_1_BUSY_BIT) );
+	wait_busy_flag_W25Q64JV();
 	// CS high, transmission finished
 	CS_HIGH();
 }
@@ -291,14 +285,24 @@ void reset_W25Q64JV(){
 uint8_t get_status_register1(){
 	// CS low, SPI slave starts to listen
 	CS_LOW();
-	// send instruction and receive register content
-	uint8_t register_content = SPI_transmit(READ_STATUS_REG_1);
+	// send instruction
+	SPI_transmit(READ_STATUS_REG_1);
+	// receive register content
+	uint8_t register_content = SPI_transmit(0xFF);
 	// CS high, transmission finished
 	CS_HIGH();
 	return register_content;
 }
 
-
+void wait_busy_flag_W25Q64JV(){
+	// CS low, SPI slave starts to listen
+	CS_LOW();
+	// send instruction
+	SPI_transmit(READ_STATUS_REG_1);
+	// poll status register 1 and check busy bit
+	while( SPI_transmit(0xFF) & STATUS_REG_1_BUSY_BIT );
+	return;
+}
 
 
 

@@ -6,6 +6,13 @@
 #define W25Q64JV_H_
 
 #include "stm32f1xx.h"
+#include "W25Q64JV_instruction_set.h"
+#include "SPI.h" //the SPI driver
+
+// these 3 defines allow easy porting to another platform
+#define CS_LOW()	GPIOA->BSRR=GPIO_BSRR_BR4	//pull chip select line low
+#define CS_HIGH()	GPIOA->BSRR=GPIO_BSRR_BS4	//push chip select line high
+#define SPI_transmit SPI1_transmit				//transmit & receive 1 byte via SPI
 
 void init_W25Q64JV();
 void power_down_W25Q64JV();
@@ -20,5 +27,6 @@ void erase_chip_W25Q64JV();
 uint64_t get_unique_ID_W25Q64JV();
 void reset_W25Q64JV();
 uint8_t get_status_register1();
+void wait_busy_flag_W25Q64JV();
 
 #endif /* W25Q64JV_H_ */
