@@ -2,9 +2,6 @@
  *  see LICENCE.txt
  */
 #include "W25Q64JV.h"
-#include "W25Q64JV_instruction_set.h"
-
-#include "SPI.h" //the SPI driver
 
 // this function is the only one that has to be modified when porting to another platform
 // it has to set up the SPI and the GPIO needed for SPI(including one for the CS line)

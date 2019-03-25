@@ -6,6 +6,8 @@
 #define W25Q64JV_H_
 
 #include "stm32f1xx.h"
+#include "W25Q64JV_instruction_set.h"
+#include "SPI.h" //the SPI driver
 
 // these 3 defines allow easy porting to another platform
 #define CS_LOW()	GPIOA->BSRR=GPIO_BSRR_BR4	//pull chip select line low
