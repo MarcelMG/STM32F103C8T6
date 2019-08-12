@@ -7,10 +7,11 @@
 
 #include "stm32f1xx.h"
 #include "init.h"
+#include "usart1.h"
 #include "i2c.h"
 #include <stdlib.h>
 
-#define QMC5883L_ADRESS 0x0D
+const uint8_t QMC5883L_ADRESS = 0x0D;
 const uint8_t X_DATA_LSB = 0x00;
 const uint8_t X_DATA_MSB = 0x01;
 const uint8_t Y_DATA_LSB = 0x02;
@@ -29,6 +30,15 @@ int16_t z_data = 0;
 char strbuf[10];
 uint8_t i2c_err;
 
+void check_i2cerr( uint8_t i2c_error ){
+	if (i2c_error){
+		itoa(i2c_error, strbuf, 2);
+		USART1_transmitString("\n error: ");
+		USART1_transmitString(strbuf);
+		USART1_transmit('\n');
+	}
+}
+
 int main(void){
 	// Initialize system timer for 1ms ticks (else divide by 1e6 for µs ticks)
 	SysTick_Config(SystemCoreClock / 1000);
@@ -40,52 +50,53 @@ int main(void){
 	// init QMC5883L
 	buf[0] = SET_RESET_PERIOD_REGISTER;
 	buf[1] = 0x01;
-	i2c_err = i2c1_write(QMC5883L_ADRESS, buf, 2);
+	i2c_err = i2c_write(QMC5883L_ADRESS, buf, 2);
 	check_i2cerr(i2c_err);
 	buf[0] = CONTROL_REGISTER_1;
 	// continuous mode, 200Hz data rate, 2G scale, 64 oversampling ratio
 	buf[1] = 0b11001101;
-	i2c_err = i2c1_write(QMC5883L_ADRESS, buf, 2);
+	i2c_err = i2c_write(QMC5883L_ADRESS, buf, 2);
 	check_i2cerr(i2c_err);
+
 	while(1){
 		// read x-data
 		buf[0] = X_DATA_LSB;
-		i2c_err = i2c1_write(QMC5883L_ADRESS, buf, 1);
+		i2c_err = i2c_write(QMC5883L_ADRESS, buf, 1);
 		check_i2cerr(i2c_err);
-		i2c_err = i2c1_read(QMC5883L_ADRESS, buf, 1);
+		i2c_err = i2c_read(QMC5883L_ADRESS, buf, 1);
 		check_i2cerr(i2c_err);
 		x_data = buf[0];
 		buf[0] = X_DATA_MSB;
-		i2c_err = i2c1_write(QMC5883L_ADRESS, buf, 1);
+		i2c_err = i2c_write(QMC5883L_ADRESS, buf, 1);
 		check_i2cerr(i2c_err);
-		i2c_err = i2c1_read(QMC5883L_ADRESS, buf, 1);
+		i2c_err = i2c_read(QMC5883L_ADRESS, buf, 1);
 		check_i2cerr(i2c_err);
 		x_data |= (buf[0] << 8);
 		// read y-data
 		buf[0] = Y_DATA_LSB;
-		i2c_err = i2c1_write(QMC5883L_ADRESS, buf, 1);
+		i2c_err = i2c_write(QMC5883L_ADRESS, buf, 1);
 		check_i2cerr(i2c_err);
-		i2c_err = i2c1_read(QMC5883L_ADRESS, buf, 1);
+		i2c_err = i2c_read(QMC5883L_ADRESS, buf, 1);
 		check_i2cerr(i2c_err);
 		y_data = buf[0];
 		buf[0] = Y_DATA_MSB;
-		i2c_err = i2c1_write(QMC5883L_ADRESS, buf, 1);
+		i2c_err = i2c_write(QMC5883L_ADRESS, buf, 1);
 		check_i2cerr(i2c_err);
-		i2c_err = i2c1_read(QMC5883L_ADRESS, buf, 1);
+		i2c_err = i2c_read(QMC5883L_ADRESS, buf, 1);
 		check_i2cerr(i2c_err);
 		y_data |= (buf[0] << 8);
 		// read z-data (NOTE: if we don't read the z-data MSB, the QMC5883L won't
 		//update the values, so we have to read it even if we don't need it
 		buf[0] = Z_DATA_LSB;
-		i2c_err = i2c1_write(QMC5883L_ADRESS, buf, 1);
+		i2c_err = i2c_write(QMC5883L_ADRESS, buf, 1);
 		check_i2cerr(i2c_err);
-		i2c_err = i2c1_read(QMC5883L_ADRESS, buf, 1);
+		i2c_err = i2c_read(QMC5883L_ADRESS, buf, 1);
 		check_i2cerr(i2c_err);
 		z_data = buf[0];
 		buf[0] = Z_DATA_MSB;
-		i2c_err = i2c1_write(QMC5883L_ADRESS, buf, 1);
+		i2c_err = i2c_write(QMC5883L_ADRESS, buf, 1);
 		check_i2cerr(i2c_err);
-		i2c_err = i2c1_read(QMC5883L_ADRESS, buf, 1);
+		i2c_err = i2c_read(QMC5883L_ADRESS, buf, 1);
 		check_i2cerr(i2c_err);
 		z_data |= (buf[0] << 8);
 		// print the result over USART1
