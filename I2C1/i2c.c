@@ -180,7 +180,7 @@ uint8_t i2c_read( uint8_t slave_address, uint8_t* data, uint8_t N ){
 		// dummy readout of the SR1 and SR2 registers to clear the ADDR flag
 		I2C1->SR1;
 		I2C1->SR2;
-		while(N>3){
+		while(N>=3){
 			// wait until a new byte is received (including ACK pulse) and DR has not been read yet
 			// check for an error to prevent getting stuck in the loop
 			t1 = sysTick_Time;
